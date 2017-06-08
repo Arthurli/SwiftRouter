@@ -56,19 +56,19 @@ public protocol RouterPageProtocol: class {
 
 public typealias RoutePageHandleBlock = (_ req: RouterPageRequest, _ callback: @escaping (Error?) -> Void) -> Void
 
-public struct RouterPageHandler: RouterHandler {
+public class RouterPageHandler: RouterHandler {
     var mapping: [String: (RoutePageHandleBlock?, RouterPageProtocol.Type?)] = [:]
 
     public init() {
         
     }
 
-    public mutating func register(key: String, page: RouterPageProtocol.Type) {
-        if page is UIViewController.Type {
-            self.mapping[key] = (nil, page)
-            return
-        }
-        assertionFailure("\(page) 不是一个 ViewController")
+    public func register(key: String, page: RouterPageProtocol.Type) {
+         self.mapping[key] = (nil, page)
+    }
+
+    public func register(key: String, handleBlock: @escaping RoutePageHandleBlock) {
+        self.mapping[key] = (handleBlock, nil)
     }
 
     public func handle(request: RouterRequest, callback: @escaping (Error?) -> Void) {

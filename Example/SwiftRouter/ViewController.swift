@@ -9,15 +9,39 @@
 import UIKit
 import SwiftRouter
 
-class ViewController: UIViewController, UIViewControllerPreviewingDelegate {
+enum PageType {
+    case first(key: String)
+    case second
 
-    var req: RouterPageRequest = {
-        return RouterPageRequest(key: "123")
-    }()
+    func inditify() -> String {
+        switch self {
+        case .first(key: _):
+            return "first"
+        case .second:
+            return "second"
+        }
+    }
+
+    func build(type: RouterPageRequest.ActionType = .push(animation: true)) -> RouterPageRequest {
+        var params: [String: Any] = [:]
+
+        switch self {
+        case let .first(key: key):
+            params["key"] = key
+        case .second:
+            break
+        }
+
+        let requst = RouterPageRequest(key: self.inditify(), params: params, type: type)
+        return requst
+    }
+
+}
+
+class ViewController: UIViewController, UIViewControllerPreviewingDelegate {
 
     var handler: RouterPageHandler = {
         var handle: RouterPageHandler = RouterPageHandler()
-        handle.register(key: "123", page: SecondViewController.self)
         return handle
     }()
 
@@ -27,8 +51,12 @@ class ViewController: UIViewController, UIViewControllerPreviewingDelegate {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
 
-        router.register(request: type(of: req), handler: handler)
+        // 注册 router 的 handler
+        router.register(request: RouterPageRequest.self, handler: handler)
 
+        // 注册 页面跳转
+        handler.register(key: PageType.second.inditify(), page: SecondViewController.self)
+        // 注册中间件
         let m1: Middleware = (handleBefore: { (req: RouterRequest, error: Error?, callback: (RouterRequest, Error?) -> Void) -> Void in
             print("before 1")
             callback(req, nil)
@@ -56,16 +84,10 @@ class ViewController: UIViewController, UIViewControllerPreviewingDelegate {
             callback(req, nil)
         })
 
-
         router.use(middleware: m1)
         router.use(middleware: m11)
         router.use(middleware: m2)
         router.use(middleware: m22)
-
-
-        DispatchQueue.main.asyncAfter(deadline: .now()+2) {
-            self.go()
-        }
 
         let btn = UIButton(type: .custom)
         btn.backgroundColor = UIColor.red
@@ -81,7 +103,7 @@ class ViewController: UIViewController, UIViewControllerPreviewingDelegate {
 
     @objc
     func go() {
-        self.router.send(req: self.req)
+        self.router.send(req: PageType.second.build())
     }
 
     override func didReceiveMemoryWarning() {
@@ -95,7 +117,7 @@ class ViewController: UIViewController, UIViewControllerPreviewingDelegate {
         if #available(iOS 9.0, *) {
             if previewingContext.sourceView == self.btn {
                 var viewController: UIViewController? = nil
-                let r = RouterPageRequest(key: "123", type: .touch(callback: { (vc) in
+                let r = PageType.second.build(type: .touch(callback: { (vc) in
                     viewController = vc
                 }))
                 self.router.send(req: r)
