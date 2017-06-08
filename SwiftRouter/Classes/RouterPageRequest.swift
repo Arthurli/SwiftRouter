@@ -46,6 +46,11 @@ public struct RouterPageRequest: RouterRequest {
         self.type = type
         self.params = params
     }
+
+    public func copy() -> RouterPageRequest {
+        let copy = RouterPageRequest(key: self.key, params: self.params, type: self.type)
+        return copy
+    }
 }
 
 public protocol RouterPageProtocol: class {
@@ -54,7 +59,7 @@ public protocol RouterPageProtocol: class {
     func viewController() -> UIViewController
 }
 
-public typealias RoutePageHandleBlock = (_ req: RouterPageRequest, _ callback: @escaping (Error?) -> Void) -> Void
+public typealias RoutePageHandleBlock = (_ rooVC: UIViewController, _ req: RouterPageRequest, _ callback: @escaping (Error?) -> Void) -> Void
 
 public class RouterPageHandler: RouterHandler {
     var mapping: [String: (RoutePageHandleBlock?, RouterPageProtocol.Type?)] = [:]
@@ -95,7 +100,7 @@ public class RouterPageHandler: RouterHandler {
         }
 
         if let handleBlock = handleObject.0 {
-            handleBlock(request, { (err) in
+            handleBlock( origin, request, { (err) in
                 callback(err)
             })
             return

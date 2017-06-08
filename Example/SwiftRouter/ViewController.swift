@@ -56,6 +56,12 @@ class ViewController: UIViewController, UIViewControllerPreviewingDelegate {
 
         // 注册 页面跳转
         handler.register(key: PageType.second.inditify(), page: SecondViewController.self)
+        handler.register(key: PageType.second.inditify()) { (vc, req, callback) in
+            let second = SecondViewController()
+            vc.navigationController?.pushViewController(second, animated: true)
+            callback(nil)
+        }
+
         // 注册中间件
         let m1: Middleware = (handleBefore: { (req: RouterRequest, error: Error?, callback: (RouterRequest, Error?) -> Void) -> Void in
             print("before 1")
